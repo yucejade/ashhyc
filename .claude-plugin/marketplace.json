@@ -1,0 +1,15 @@
+{
+  "name": "ashhyc",
+  "description": "ashhyc自定义 skills 插件",
+  "owner": {
+    "name": "yucejade"
+  },
+  "plugins": [
+    {
+      "name": "ashhyc",
+      "description": "ashhyc自定义 skills 插件",
+      "version": "1.0.0",
+      "source": "./"
+    }
+  ]
+}
