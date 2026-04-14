@@ -1,15 +1,21 @@
 {
-  "name": "ashhyc-marketplace",
-  "description": "ashhyc自定义 skills 插件市场",
+  "name": "ashhyc",
   "owner": {
     "name": "yucejade"
+  },
+  "metadata": {
+    "description": "ashhyc自定义 skills 插件市场",
+    "version": "1.0.0"
   },
   "plugins": [
     {
       "name": "ashhyc",
       "description": "ashhyc自定义 skills 插件",
       "version": "1.0.0",
-      "source": "./"
+      "source": {
+        "source": "url",
+        "url": "https://github.com/yucejade/ashhyc.git"
+      }
     }
   ]
 }
