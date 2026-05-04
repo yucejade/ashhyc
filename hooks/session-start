@@ -1,0 +1,54 @@
+#!/usr/bin/env bash
+# SessionStart hook for ashhyc plugin
+# Reads schedule.md + todos.md from project, outputs status summary as context injection
+
+set -euo pipefail
+
+# Read up to N lines from a file, handling missing files gracefully
+read_head() {
+    local file="$1"
+    local lines="${2:-20}"
+    if [ -f "$file" ]; then
+        head -n "$lines" "$file" 2>/dev/null || true
+    fi
+}
+
+# Escape string for JSON embedding using bash parameter substitution
+escape_for_json() {
+    local s="$1"
+    s="${s//\\/\\\\}"
+    s="${s//\"/\\\"}"
+    s="${s//$'\n'/\\n}"
+    s="${s//$'\r'/\\r}"
+    s="${s//$'\t'/\\t}"
+    printf '%s' "$s"
+}
+
+# Determine project root (current working directory when hook fires)
+PROJECT_DIR="${CLAUDE_PROJECT_DIR:-$(pwd)}"
+
+# Read project status files
+schedule_file="${PROJECT_DIR}/.claude/schedule/schedule.md"
+todos_file="${PROJECT_DIR}/.claude/todos/todos.md"
+
+schedule_content=$(read_head "$schedule_file" 20)
+todos_content=$(read_head "$todos_file" 40)
+
+# Build status summary
+if [ -z "$schedule_content" ] && [ -z "$todos_content" ]; then
+    # No project status files found
+    context="<ashhyc-session-start>\n项目状态文件未找到。如需使用会话管理功能，请初始化以下文件：\n- .claude/schedule/schedule.md（工作进度）\n- .claude/todos/todos.md（待办事项）\n\n可手动调用 ashhyc:session-startup skill 获取初始化模板。\n</ashhyc-session-start>"
+else
+    schedule_escaped=$(escape_for_json "$schedule_content")
+    todos_escaped=$(escape_for_json "$todos_content")
+
+    context="<ashhyc-session-start>\n以下是当前项目的进度和待办状态摘要。详细操作请使用 ashhyc:session-startup skill。\n\n## schedule.md（前20行）\n${schedule_escaped}\n\n## todos.md（前40行）\n${todos_escaped}\n</ashhyc-session-start>"
+fi
+
+context_escaped=$(escape_for_json "$context")
+
+# Output context injection as JSON for Claude Code
+# Claude Code expects hookSpecificOutput.additionalContext format
+printf '{\n  "hookSpecificOutput": {\n    "hookEventName": "SessionStart",\n    "additionalContext": "%s"\n  }\n}\n' "$context_escaped"
+
+exit 0

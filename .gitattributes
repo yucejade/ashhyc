@@ -1,0 +1,8 @@
+# Ensure shell scripts always have LF line endings
+hooks/session-start text eol=lf
+hooks/session-stop text eol=lf
+hooks/run-hook.cmd text eol=lf
+
+# Common text files
+*.md text eol=lf
+*.json text eol=lf

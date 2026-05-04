@@ -14,6 +14,13 @@ Claude Code 个人自定义 Skills 插件，提供通用的项目管理工作流
 | 测试 | `ashhyc:testing` | 编写/运行测试时的通用约束和检查清单 |
 | 集成 | `ashhyc:integration` | 提交代码、合并分支、CI/CD 的通用规范 |
 
+### Hooks（自动触发）
+
+| Hook | 触发时机 | 用途 |
+|------|---------|------|
+| SessionStart | 会话启动、`/clear`、`/compact` | 自动注入项目进度和待办状态到会话上下文 |
+| Stop | 每次响应结束后 | 检测 `.claude/` 未保存修改并提醒 |
+
 ### 双层 Skill 架构
 
 本插件提供**通用层**规则，项目可通过本地 `.claude/skills/` 添加**项目层**补充：
@@ -95,26 +102,29 @@ docs/
 
 ### 可靠性保障
 
-在项目 `.claude/settings.json` 中添加 Stop hook，自动提醒保存：
+插件内置 Stop hook，自动检测 `.claude/` 目录未保存的修改并提醒。无需手动配置。
 
-```json
-{
-  "hooks": {
-    "Stop": [{
-      "id": "stop:save-reminder",
-      "matcher": "*",
-      "description": "提醒保存 .claude 目录修改",
-      "hooks": [{
-        "type": "command",
-        "command": "git diff --name-only 2>/dev/null | grep -q '^\\.claude/' && echo '[提醒] .claude 目录有未保存修改，会话结束前请执行 session-exit 保存工作状态。' || true",
-        "timeout": 5
-      }]
-    }]
-  }
-}
-```
+### Hooks 详细说明
+
+**SessionStart Hook**
+- 读取 `.claude/schedule/schedule.md`（前20行）和 `.claude/todos/todos.md`（前40行）
+- 将项目状态摘要注入到会话上下文中
+- 文件不存在时输出初始化指引，不影响会话正常使用
+
+**Stop Hook**
+- 检查 `.claude/` 目录是否有未保存的 git 修改（未暂存/已暂存/未跟踪）
+- 有修改时输出保存提醒
+- 非 git 项目静默跳过
+
+> Hook 是自动触发的，无需手动调用。如需更详细的会话管理，仍可手动调用 `ashhyc:session-startup` 和 `ashhyc:session-exit` skills。
 
 ## 版本历史
+
+### v1.2.0
+- 新增 SessionStart hook：自动注入项目进度和待办状态到会话上下文
+- 新增 Stop hook：检测未保存的 `.claude/` 修改并提醒保存
+- 添加 `.gitattributes` 确保 hook 脚本跨平台兼容
+- 移除手动 Stop hook 配置说明（已内置）
 
 ### v1.1.0
 - 新增 `session-startup`、`session-exit` 会话管理 skills

@@ -1,0 +1,43 @@
+#!/usr/bin/env bash
+# Stop hook for ashhyc plugin
+# Checks for uncommitted .claude/ changes and reminds user to save
+
+set -euo pipefail
+
+# Determine project root
+PROJECT_DIR="${CLAUDE_PROJECT_DIR:-$(pwd)}"
+
+# Check if we're in a git repository
+if ! git -C "$PROJECT_DIR" rev-parse --git-dir >/dev/null 2>&1; then
+    # Not a git repo - skip silently
+    exit 0
+fi
+
+# Check for uncommitted changes in .claude/ directory
+changed_files=$(git -C "$PROJECT_DIR" diff --name-only 2>/dev/null | grep '^\.claude/' || true)
+staged_files=$(git -C "$PROJECT_DIR" diff --cached --name-only 2>/dev/null | grep '^\.claude/' || true)
+untracked_files=$(git -C "$PROJECT_DIR" ls-files --others --exclude-standard "${PROJECT_DIR}/.claude/" 2>/dev/null | grep '^\.claude/' || true)
+
+if [ -z "$changed_files" ] && [ -z "$staged_files" ] && [ -z "$untracked_files" ]; then
+    # No .claude/ changes - exit silently
+    exit 0
+fi
+
+# Escape for JSON
+escape_for_json() {
+    local s="$1"
+    s="${s//\\/\\\\}"
+    s="${s//\"/\\\"}"
+    s="${s//$'\n'/\\n}"
+    s="${s//$'\r'/\\r}"
+    s="${s//$'\t'/\\t}"
+    printf '%s' "$s"
+}
+
+reminder="[ashhyc] .claude/ 目录有未保存的修改。建议在结束会话前执行 session-exit 流程保存工作状态。"
+reminder_escaped=$(escape_for_json "$reminder")
+
+# Output as systemMessage (non-blocking reminder)
+printf '{\n  "systemMessage": "%s"\n}\n' "$reminder_escaped"
+
+exit 0
