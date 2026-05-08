@@ -1,21 +1,11 @@
 {
   "name": "ashhyc",
-  "owner": {
-    "name": "yucejade"
-  },
-  "metadata": {
-    "description": "ashhyc自定义 skills 插件市场",
-    "version": "1.2.0"
-  },
-  "plugins": [
-    {
-      "name": "ashhyc",
-      "description": "ashhyc自定义 skills 插件",
-      "version": "1.2.0",
-      "source": {
-        "source": "url",
-        "url": "https://github.com/yucejade/ashhyc.git"
-      }
-    }
-  ]
+  "display_name": "ashhyc",
+  "description": "ashhyc自定义 skills 插件 — 顶层约束、会话管理、设计评审、文档/编码/测试/集成通用 skill",
+  "version": "1.3.0",
+  "author": "yucejade",
+  "source": {
+    "source": "github",
+    "repo": "yucejade/ashhyc"
+  }
 }
