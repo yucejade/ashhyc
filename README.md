@@ -10,7 +10,7 @@ Claude Code 个人自定义 Skills 插件，提供通用的项目管理工作流
 | 会话启动 | `ashhyc:session-startup` | 新会话开始时加载项目进度和待办事项 |
 | 会话退出 | `ashhyc:session-exit` | 会话结束前保存进度/待办/QA/决策/文档索引 |
 | 设计评审 | `ashhyc:design-review` | 三角色结构化评审（PM/Dev/QA）+ 交叉验证 |
-| 文档 | `ashhyc:documentation` | 编写/修改设计文档时的通用规则和检查清单 |
+| 文档 | `ashhyc:documentation` | 编写/修改设计文档时的通用规则、写作质量规则和检查清单 |
 | 编码 | `ashhyc:coding` | 编写/修改代码时的通用约束和检查清单 |
 | 测试 | `ashhyc:testing` | 编写/运行测试时的通用约束和检查清单 |
 | 集成 | `ashhyc:integration` | 提交代码、合并分支、CI/CD 的通用规范 |
@@ -132,6 +132,10 @@ docs/
 > Hook 是自动触发的，无需手动调用。如需更详细的会话管理，仍可手动调用 `ashhyc:session-startup` 和 `ashhyc:session-exit` skills。
 
 ## 版本历史
+
+### v1.4.0
+- 合并 `doc-writing` skill 到 `documentation` skill（写作质量规则 + 跨文档一致性 + 验证与测试 + 评审纪律）
+- 抽象化跨文档一致性规则：§3.1 从"事件订阅关系"→"契约定义"；§5.2 从"dataclass/DDL"→"所有实现形式"
 
 ### v1.3.0
 - 新增 `principles` 顶层约束 skill：事实核查（不假设、不臆断）+ 信息优先级（文档问题以审查过的为准，代码问题以文档为准）
