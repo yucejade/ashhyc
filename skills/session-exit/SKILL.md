@@ -38,7 +38,8 @@ description: Use when ending a conversation session to save current work progres
 - 如果没有与项目相关的讨论内容则跳过
 
 ### 4. 更新设计决策（.claude/QA/decision/）
-- 如果本次会话有架构或设计决策，在 decision 目录下单独保存
+- **不主动识别或保存设计决策**，仅当用户在本次会话中明确要求保存决策时才执行
+- 用户要求保存时：在 decision 目录下创建/更新对应文件
 - 检查 decision 目录中的已有决策是否有冲突：
   - 冲突时以 .claude/QA 中原始记录的时间顺序为准
   - 时间在后面的记录为权威来源
