@@ -182,6 +182,7 @@ digraph code_review {
 | Optional 类型窄化 | mypy 要求访问 Optional 属性前先 assert 或 if 检查 | `self._config.xxx` → `assert self._config is not None` |
 | 未使用的导入 | ruff F401 对未使用的 import 报错 | 清理未使用的 import |
 | conda run 脚本限制 | `conda run -n env python -c "..."` 多行脚本在 Windows 下可能换行符异常 | 改用 Python 路径直接执行 |
+| 冗余/死代码 | 永远不会执行的代码路径、重复赋值、不可达分支 | 重复赋值（`self.x = a; self.x = a`）；条件恒假（`if False`）；`return` 后的语句；因架构约束永远不会触发的逻辑（如引擎不跨天运行却有跨日重置） |
 
 ### 第5步：编码规范检查
 
