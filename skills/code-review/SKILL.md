@@ -1,6 +1,6 @@
 ---
 name: code-review
-description: Use when code needs comprehensive audit against design docs — covers design-doc comparison, coding standards check, test verification, and fix cycles. Run after implementation or when inheriting a codebase.
+description: Use when code needs comprehensive audit against design docs — covers design-doc comparison, coding standards check, test verification, logic-issue repro tests for user confirmation, and fix cycles. Run after implementation or when inheriting a codebase.
 ---
 
 # 代码审查
@@ -48,6 +48,7 @@ digraph code_review {
     start [label="1. 收集产物 & 确定范围" shape=oval];
     compare [label="2. 设计文档与代码差异比对"];
     classify [label="3. 差异分类 & 优先级排序"];
+    repro [label="3.5 问题测试化（复现→用户确认→合并护栏）"];
     fix [label="4. 逐项修复（按优先级）"];
     lint [label="5. 编码规范检查"];
     test [label="6. 运行全量测试"];
@@ -57,7 +58,8 @@ digraph code_review {
     scope -> start;
     start -> compare;
     compare -> classify;
-    classify -> fix;
+    classify -> repro;
+    repro -> fix;
     fix -> lint;
     lint -> test;
     test -> recheck;
@@ -156,6 +158,124 @@ digraph code_review {
 3. Minor → 修复或记录
 
 向用户展示分类结果（含修复方向：改代码 / 改设计），确认后执行修复。
+
+### 第 3.5 步：问题测试化（复现 → 用户确认 → 防退化护栏）
+
+**核心目的**：
+1. **客观证明问题真实存在**——用 FAILED 测试代替 AI 主观判断，防止误判
+2. **作为给用户的问题说明工具**——让用户基于可复现的测试用例理解问题，而非凭描述猜测
+3. **构成防退化护栏**——用户确认有效后，测试合并入正式测试集，后续修改引起 degrade 时立即被全量测试捕获
+
+**适用范围**：
+- ✅ Critical / Important 中的**逻辑类**问题（流程错误、状态机错误、数据流错误、分支条件错误、计算错误）
+- ❌ 豁免：纯命名、注释、格式、import 整理等非逻辑问题；Minor 级别问题
+
+**三阶段流程**：
+
+| 阶段 | 时机 | 动作 |
+|------|------|------|
+| **A. 复现** | 修复前 | 为每个问题编写测试，在当前未修复代码上运行确认 FAILED |
+| **B. 用户确认** | 修复前 | 用测试 + FAILED 结果向用户演示，等用户判定问题真实有效 |
+| **C. 合并** | 修复后 | 用户确认过、修复后变 PASSED 的测试，合并入正式测试集 |
+
+**阶段 A：编写复现测试**
+
+测试类型选择（优先级）：
+
+| 优先级 | 类型 | 适用场景 |
+|--------|------|---------|
+| 1（首选） | **集成测试** | 复现依赖真实外部系统（QMT/MiniQMT、DB、EventBus）。用户已确认可启动 MiniQMT |
+| 2（降级） | **单元测试** | 复现依赖盘中实时交易环境（无法离线触发） |
+
+**降级判定标准**（满足任一即降级单元测试，用 mock 模拟实时环境）：
+- 需要 9:30~15:00 真实交易时段的实时 tick 数据
+- 需要真实委托/成交回报（无法离线触发）
+- 用户当前无法启动 MiniQMT 实例
+
+**目录结构（强制）**：
+
+相对项目根目录，每个问题一个子目录：
+
+```
+.claude/review/verify/<问题编号>/
+├── README.md           # 问题描述、修改方向、测试类型、用户确认状态、合并去向
+├── conftest.py         # （可选）测试 fixture
+├── test_<场景>.py      # 复现用例（可多个）
+└── fixtures/           # （可选）测试数据
+```
+
+**问题编号**：复用第 3 步的差异编号（如 `C-1`、`I-3`、`M-2`）。
+
+**README.md 模板（强约束字段）**：
+
+```markdown
+# <编号>: <问题简述>
+
+## 问题描述
+- 文件: <path>:<line>
+- 现象: <bug 行为>
+- 根因: <原因分析>
+
+## 修改方向（必填，对齐第 3.1 步判定）
+- [ ] 修改代码（默认，对齐设计文档）
+- [ ] 修改设计文档
+  - 理由（三选一）: □ 流程走不通 □ 大量冗余代码 □ 设计内部矛盾
+  - 详述: xxx
+
+## 测试类型
+- [ ] 集成测试（首选）
+- [ ] 单元测试（降级，原因：xxx）
+
+## 用户确认状态
+- [ ] 已确认问题真实有效
+- [ ] 误判，弃用
+
+## 合并去向（用户确认 + 修复完成后填写）
+- 已合并到: tests/<integration|unit>/<模块>/test_xxx.py
+- 场景清单登记: docs/集成测试/场景与性能风险清单.md §<章节>
+
+## 运行命令
+\`\`\`bash
+conda run -n jjquant-v2 python -m pytest .claude/review/verify/<编号>/ -v
+\`\`\`
+
+## 复现结果
+- 修复前: FAILED（断言失败位置）
+- 修复后: PASSED
+```
+
+**阶段 B：用户确认问题**
+
+向用户展示每个待确认问题的完整附件：
+1. 问题清单（编号、文件、现象、修改方向）
+2. 对应复现测试路径 `.claude/review/verify/<编号>/`
+3. 测试运行结果（FAILED 状态 + 失败位置）
+
+用户对每个问题做出判定：
+- ✅ **确认问题真实有效** → 进入第 4 步修复，修复后进入阶段 C 合并
+- ❌ **判定为误判** → 弃用修复，verify 目录保留作为审计记录但不合并
+
+**关键约束**：用户未确认前，不得进入第 4 步修复，不得合并入正式测试集。
+
+**阶段 C：合并入正式测试集（修复完成后）**
+
+用户确认过且修复后已 PASSED 的测试，必须合并入项目正式测试目录：
+
+| 测试类型 | 合并去向 |
+|---------|---------|
+| 集成测试 | `tests/integration/<模块>/` |
+| 单元测试 | `tests/unit/<模块>/` |
+
+**合并操作**：
+1. 移动测试文件到对应正式目录（保持单一来源，避免双份维护）
+2. 更新 import 路径、注册 fixture、对齐项目 conftest
+3. 同步登记到 `docs/集成测试/场景与性能风险清单.md`（如适用）
+4. 原 verify 目录的 README 保留作为审计记录，更新「合并去向」字段指向新位置
+5. 合并后这些测试进入第 6 步「运行全量测试」覆盖范围，构成防退化护栏
+
+**与第 6 步「运行全量测试」的关系**：
+- 第 3.5 步：针对**单个问题**的定向复现测试（增量、聚焦、给用户演示）
+- 第 6 步：**全量回归**测试（含已合并的复现用例，防止修复引入副作用或后续 degrade）
 
 ### 第4步：逐项修复（按优先级）
 
@@ -270,6 +390,15 @@ python -m pytest tests/ -v
 
 **新增测试：** X tests
 
+### 问题清单（字段定义见 .claude/review/verify/<编号>/README.md）
+
+> 每个 Critical / Important 逻辑类问题一行，**完整字段以对应 verify/<编号>/README.md 为权威来源**（含根因、修改方向理由、测试类型降级原因、合并去向等）。
+
+| # | 文件:行 | 现象 | 修改方向 | 测试类型 | 用户确认 | 合并去向 | 复现 |
+|---|---------|------|---------|---------|---------|---------|------|
+| C-1 | qmt_data_source.py:165 | 增量查询 period 与写入不一致 | 修改代码 | 集成 | ☐ 待确认 / ☑ 已确认 | tests/integration/data/test_xxx.py | FAILED→PASSED |
+| I-3 | ... | ... | 修改设计（流程走不通） | 单元（盘中降级） | ☐ 待确认 | — | FAILED→PASSED |
+
 ### 剩余差异（需后续处理）
 | # | 差异 | 严重程度 | 说明 |
 |---|------|---------|------|
@@ -290,6 +419,10 @@ python -m pytest tests/ -v
 - 测试失败被视为"已知问题"跳过 — 必须修复到通过
 - 跳过最终比对验证直接出报告 — 修复后必须重新验证
 - 凭记忆判断代码行为 — 必须实际读取文件确认
+- **Critical/Important 逻辑类问题不写复现测试直接进入修复** — 主观判断不算证据，必须用 FAILED 测试客观证明
+- **不向用户演示测试结果就声称问题真实存在** — 必须运行测试展示 FAILED 状态作为问题说明附件
+- **用户未确认问题就修复或合并入正式测试集** — 必须等用户判定问题真实有效后才能进入修复或合并
+- **用户确认问题且修复完成后但不合并入正式测试集** — 必须合并，构成防退化护栏；不合并等于放任后续 degrade
 
 ## 常见借口对照
 
