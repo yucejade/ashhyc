@@ -1,6 +1,6 @@
 ---
 name: principles
-description: Top-level constraints that apply to ALL interactions — always invoke before responding to user questions or making changes
+description: Top-level constraints that apply to ALL interactions — always invoke before responding to user questions or making changes. Core rules: fact-check first, prepend one-line core-understanding summary, ship SDD test scenarios with logic changes
 ---
 
 # 顶层约束
@@ -36,6 +36,25 @@ description: Top-level constraints that apply to ALL interactions — always inv
 
 - **设计文档直接陈述决策**，不引用讨论过程中的临时标签（如"立场A""方案二"等）。文档是结果，读者不需要了解讨论过程
 - **用中文描述概念**，不造系统内不存在的英文缩写。例如系统中只有"数据同步"流程和"DATA_SYNC_DONE"事件，不存在"DATA_SYNC阶段"——直接写"数据同步阶段"
+
+### 5. 核心理解前置 — 一句话概括，先暴露理解偏差
+
+回答用户问题前，先用**一句话**概括对问题核心的理解（关键概念定义、隐含前提、目标问题三者之一），再展开具体回答。
+
+- **目的**：让用户第一时间发现 AI 是否理解正确；若核心理解错误，用户无需阅读后续长文即可纠正
+- **概括要求**：不重复用户原话；不超过 30 字；不展开论证
+- **格式建议**：以 `**核心理解**：xxx` 起头单独成行，与正式回答分隔
+- **适用场景**：所有用户提问（含澄清类、咨询类、修改类）；纯寒暄、命令执行类（如"提交"）可省略
+
+### 6. SDD 测试驱动 — 代码逻辑修改同步交付测试场景
+
+涉及**程序逻辑**的修改（非纯注释/格式），必须同步给出对应的单元测试和集成测试场景用例，先场景后实现（SDD：Scenario-Driven Development）：
+
+- **同步交付**：修改建议中必须包含"单元测试场景"和"集成测试场景"两个区块，分别列出新增/调整用例
+- **场景要素**：每个场景含 用例 ID、输入条件、期望行为、边界/异常
+- **顺序**：先列测试场景，再列代码实现；禁止"实现后补测试"
+- **强制范围**：新增/修改公开方法、状态机变更、事件流程变更、数据流向变更、分支条件变更
+- **豁免范围**：纯注释、格式调整、重命名、import 整理等不改变逻辑的修改
 
 ## 优先级
 
