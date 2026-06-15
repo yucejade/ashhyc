@@ -1,6 +1,6 @@
 ---
 name: principles
-description: Top-level constraints that apply to ALL interactions — always invoke before responding to user questions or making changes. Core rules: fact-check first, prepend one-line core-understanding summary, ship SDD test scenarios with logic changes
+description: Top-level constraints that apply to ALL interactions — always invoke before responding to user questions or making changes. Core rules: fact-check first, prepend one-line core-understanding summary, ship SDD test scenarios with logic changes, all assumptions must be empirically verified (official docs as fallback only)
 ---
 
 # 顶层约束
@@ -55,6 +55,27 @@ description: Top-level constraints that apply to ALL interactions — always inv
 - **顺序**：先列测试场景，再列代码实现；禁止"实现后补测试"
 - **强制范围**：新增/修改公开方法、状态机变更、事件流程变更、数据流向变更、分支条件变更
 - **豁免范围**：纯注释、格式调整、重命名、import 整理等不改变逻辑的修改
+
+### 7. 假设必须证实 — 实测优先，官网文档次之
+
+任何关于代码行为、外部接口、第三方系统、数据格式、协议约定的事实性陈述，**禁止以假设、推测、WebSearch 第三方转述作为依据**，必须按以下证据等级证实：
+
+**证据等级（从高到低）**：
+1. **实测**：在真实环境中运行得到输出（最高级证据，能实测就必须实测）
+2. **源码**：读 API / 库的源码确认实现
+3. **官网文档**：官方发布的一手文档（接口签名、参数定义、行为约定）
+4. **第三方转述**：博客、Stack Overflow、GitHub README、WebSearch 结果——**只是线索，不构成事实**
+
+**规则**：
+- **优先实测**：能实测就必须实测；无法实测（环境缺失、接口未上线、硬件依赖等）时降级用源码或官网文档
+- **第三方信息只作线索**：WebSearch 结果、博客、非官方仓库 README 用于发现问题 / 定位方向，不作为最终结论的依据；找到线索后必须升级到实测 / 源码 / 官网文档
+- **"已查证"必须可溯源**：文档中写"已查证 / 已确认"必须附带证据等级和可复现步骤（命令 / 代码 / 输出 / 官网链接）；无溯源的"已查证"一律视为假设
+- **遇到需要环境的证实时**：必须暂停推进，明确告知用户"此假设需要 X 环境证实"，请求用户协助提供环境（如打开 QMT 终端、登录账号、安装依赖）；**禁止跳过证实步骤直接推导**
+- **禁止假设伪装成事实**：陈述句式表达事实；未证实的内容必须用"（未证实，待验证）"等明确标记，不得用"已查证""官方约定"等措辞包装假设
+- **禁止在假设上叠加假设**：发现底层假设未证实时，立即停止后续推导，先回到底层证实
+- **发现既有假设错误时**：立即停止推导链，先重写事实基础（修正文档 + 标注新证据），再继续后续工作
+
+**触发场景**：编写涉及外部 API 行为、数据格式、协议约定、第三方库行为、跨系统交互的文档或代码前，必须先证实
 
 ## 优先级
 
