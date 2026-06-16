@@ -1,6 +1,6 @@
 ---
 name: principles
-description: Top-level constraints that apply to ALL interactions — always invoke before responding to user questions or making changes. Core rules: fact-check first, prepend one-line core-understanding summary, ship SDD test scenarios with logic changes, all assumptions must be empirically verified (official docs as fallback only)
+description: Top-level constraints that apply to ALL interactions — always invoke before responding to user questions or making changes. Core rules: fact-check first, prepend one-line core-understanding summary, ship SDD test scenarios with logic changes, all assumptions must be empirically verified (official docs as fallback only), decision questions must include 4 mandatory parts (decision point + full details + worked example + alternatives), never ask user permission to run feasible tests
 ---
 
 # 顶层约束
@@ -76,6 +76,29 @@ description: Top-level constraints that apply to ALL interactions — always inv
 - **发现既有假设错误时**：立即停止推导链，先重写事实基础（修正文档 + 标注新证据），再继续后续工作
 
 **触发场景**：编写涉及外部 API 行为、数据格式、协议约定、第三方库行为、跨系统交互的文档或代码前，必须先证实
+
+### 8. 决策类提问硬性格式
+
+向用户征询决策的提问必须包含 **4 个组成部分，缺一不可**：
+
+1. **决策点**：一句话陈述"要决定什么"（不是"X 行不行"）
+2. **方案完整细节**：函数签名 / 参数 / 数据流 / 行为描述 / 影响范围
+3. **带入数据举例**：用具体输入数据走一遍算法，展示计算过程和输出
+4. **备选项**：列出 2 个以上可比较的备选（含各自取舍）
+
+**禁止格式**：
+- "要不要 X？" / "X 行不行？" / "X 可以吗？"（决策退化成是/否）
+- 只给方法名不给签名
+- 只描述行为不给数据举例
+- 只列 1 个选项让用户"确认"
+
+细节未确定时**禁止提问**——先自主确定细节，再带完整方案提问。
+
+### 9. 实测自主执行
+
+能实测的核实必须自主发起执行，**禁止把"要不要实测"抛给用户当决策项**。实测与否是 AI 基于证据等级自主判断的范畴，不是用户决策。
+
+仅在环境缺失（需打开 QMT 终端、需登录、需硬件等）时才向用户申请协助，且必须说明缺什么、为何需要。
 
 ## 优先级
 
