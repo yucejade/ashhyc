@@ -20,7 +20,7 @@ Claude Code 个人自定义 Skills 插件，提供通用的项目管理工作流
 所有 skill 和交互的最高优先级规则：
 
 1. **事实核查**：所有回复必须基于已核实的代码或官方文档，不假设、不臆断
-2. **信息优先级**：文档问题以审查过的为准，代码问题以文档为准
+2. **信息优先级**：文档问题以审查过的为准，代码问题以文档为准；最终设计书（`docs/architecture/*`）是唯一权威，决策记录（`docs/决策/`、`DL-xx`、`PROGRESS.md`）只是过程产物不作依据
 
 ### Hooks（自动触发）
 
@@ -132,6 +132,14 @@ docs/
 > Hook 是自动触发的，无需手动调用。如需更详细的会话管理，仍可手动调用 `ashhyc:session-startup` 和 `ashhyc:session-exit` skills。
 
 ## 版本历史
+
+### v1.6.0
+- 扩展 `principles` 第 2 条「信息优先级」：明确最终设计书（`docs/architecture/*`）是唯一权威，决策记录（`docs/决策/`、`DL-xx`、`PROGRESS.md`、讨论记录）是过程产物不作依据；新增冲突仲裁规则（设计书 > 决策记录）
+- 统一版本号：`package.json` / `plugin.json` / `marketplace.json` 全部对齐到 1.6.0（此前不一致：package=1.5.0，plugin/marketplace=1.3.0）
+
+### v1.5.0
+- 扩展 `principles` skill：新增第 7 条「假设必须证实」（实测优先，官网文档次之）、第 8 条「决策类提问硬性格式」、第 9 条「实测自主执行」
+- `code-review` skill 新增第 3.5 步「问题测试化」环节
 
 ### v1.4.0
 - 合并 `doc-writing` skill 到 `documentation` skill（写作质量规则 + 跨文档一致性 + 验证与测试 + 评审纪律）

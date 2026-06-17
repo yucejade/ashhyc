@@ -1,6 +1,6 @@
 ---
 name: principles
-description: Top-level constraints that apply to ALL interactions — always invoke before responding to user questions or making changes. Core rules: fact-check first, prepend one-line core-understanding summary, ship SDD test scenarios with logic changes, all assumptions must be empirically verified (official docs as fallback only), decision questions must include 4 mandatory parts (decision point + full details + worked example + alternatives), never ask user permission to run feasible tests
+description: Top-level constraints that apply to ALL interactions — always invoke before responding to user questions or making changes. Core rules: fact-check first, final design books (docs/architecture/*) are the sole authority over decision records, prepend one-line core-understanding summary, ship SDD test scenarios with logic changes, all assumptions must be empirically verified (official docs as fallback only), decision questions must include 4 mandatory parts (decision point + full details + worked example + alternatives), never ask user permission to run feasible tests
 ---
 
 # 顶层约束
@@ -25,6 +25,8 @@ description: Top-level constraints that apply to ALL interactions — always inv
 - **文档问题**：以审查过的文档为准。刚经过设计评审/重构的内容视为权威来源，其他不一致的文档应向其对齐
 - **代码问题**：以文档为准。当代码实现与设计文档不一致时，以设计文档为基准判断正确行为，差异需上报用户确认
 - **时间优先**：多份文档描述同一内容时，后编写/修改的文档更准确，优先以后改的文档为准
+- **文档层级（设计书 > 决策记录）**：`docs/architecture/*` 最终设计书是唯一权威来源；`docs/决策/`、`PROGRESS.md`、讨论记录、`DL-xx` 决策编号等是设计过程的中间产物，**不作事实依据**。引用设计结论时只引最终设计书，决策记录仅用于追溯决策来由，不能用作判断"设计是否如此"的依据（前面的决策可能在后续评审中被推翻，最终结论落实在设计书中）
+- **冲突仲裁**：当决策记录与最终设计书不一致时，以最终设计书为准；发现不一致时必须向用户上报差异（标注两处出处：决策记录位置 + 设计书位置），不擅自用决策记录推翻设计书。本规则源于一次真实失误：曾用 `DL-07`/`DL-08` 决策记录判断"未完成 bar 是否落盘"，被设计书 `0532 §5.3.2.6` 推翻
 
 ### 3. 问答纪律 — 先核实再回答，回答带依据
 - **不要问用户想要做什么**：主动查找（如：与用户的历史对话记录）用户想要解决的问题，猜测用户意图
