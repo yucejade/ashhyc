@@ -133,6 +133,11 @@ docs/
 
 ## 版本历史
 
+### v1.7.0
+- 增强 `integration-test` skill：明确产品级集成测试口径，禁止在正式集成测试用例中直接调用函数/handler、检查内部对象或使用 mock/patch 表达
+- 将集成测试输入输出约束改为产品可观察证据：正式产品入口、真实配置、DB、日志、文件、系统进程、网络请求和性能指标
+- 统一版本号：`package.json` / `plugin.json` / `marketplace.json` 全部对齐到 1.7.0
+
 ### v1.6.0
 - 扩展 `principles` 第 2 条「信息优先级」：明确最终设计书（`docs/architecture/*`）是唯一权威，决策记录（`docs/决策/`、`DL-xx`、`PROGRESS.md`、讨论记录）是过程产物不作依据；新增冲突仲裁规则（设计书 > 决策记录）
 - 统一版本号：`package.json` / `plugin.json` / `marketplace.json` 全部对齐到 1.6.0（此前不一致：package=1.5.0，plugin/marketplace=1.3.0）
